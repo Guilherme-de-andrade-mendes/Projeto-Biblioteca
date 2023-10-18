@@ -1,23 +1,30 @@
 #include <stdio.h>
 #include <locale.h>
 
+void Linhas(){
+    printf("==========================================================================================\n");
+}
+
 int MenuPrincipal() {
     int op;
-    printf("==========================================================================================\nGerenciamento de Biblioteca\n\n1-Submenu de Usuários.\n2-Submenu de Livros.\n3-Submenu de Empréstimos.\n4-Submenu de Relatórios.\n5-Sair.\nEntre com o número do submenu desejado: ");
+    Linhas();
+    printf("Gerenciamento de Biblioteca\n\n1-Submenu de Usuários.\n2-Submenu de Livros.\n3-Submenu de Empréstimos.\n4-Submenu de Relatórios.\n5-Sair.\nEntre com o número do submenu desejado: ");
     scanf("%d", &op);
     return op;
 }
 
 int Submenus() {
     int op;
-    printf("==========================================================================================\n1-Incluir.\n2-Listar todos.\n3-Listar um elemento específico\n4-Alterar.\n5-Excluir.\n6-Voltar.\nEntre com o número da funcionalidade desejada: ");
+    Linhas();
+    printf("1-Incluir.\n2-Listar todos.\n3-Listar um elemento específico\n4-Alterar.\n5-Excluir.\n6-Voltar.\nEntre com o número da funcionalidade desejada: ");
     scanf("%d", &op);
     return op;
 }
 
 int SubmenuRelatorios() {
     int op;
-    printf("==========================================================================================\n1-Mostrar todos os usuários pela idade.\n2-Mostrar todos os livros por seu(s) autor(es).\n3-Mostrar dados por meio de empréstimo.\n4-Voltar.\nEntre com o número da funcionalidade desejada: ");
+    Linhas();
+    printf("1-Mostrar todos os usuários pela idade.\n2-Mostrar todos os livros por seu(s) autor(es).\n3-Mostrar dados por meio de empréstimo.\n4-Voltar.\nEntre com o número da funcionalidade desejada: ");
     scanf("%d", &op);
     return op;
 }
@@ -113,6 +120,7 @@ int main() {
                 break;
         }
     } while (opcao_Menu != 5);
+    Linhas();
     printf("Obrigado por utilizar nosso sistema. Volte sempre!\n");
     return 0;
 }

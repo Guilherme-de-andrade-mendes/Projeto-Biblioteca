@@ -1,18 +1,18 @@
 #include <stdio.h>
 #include <locale.h>
 
-typedef struct{
+typedef struct {
     int cpf;
     char nome[100];
     char nascimento[11];
     char rua[100];
-    char cep[9];
-    char telefones[100][11];
-    char emails[100][10];
+    char cep[11];
+    char telefones[100][15];
+    char emails[100][50];
     char profissao[100];
 } User;
 
-void Linhas(){
+void Linhas() {
     printf("==========================================================================================\n");
 }
 
@@ -40,7 +40,7 @@ int SubmenuRelatorios() {
     return op;
 }
 
-void IncluirUsuario(User usuario[], int indUser){
+void IncluirUsuario(User usuario[], int indUser) {
     printf("====================== Incluindo Usuário ======================\nCPF: ");
     scanf("%d", &usuario[indUser].cpf);
     printf("Nome: ");
@@ -49,83 +49,98 @@ void IncluirUsuario(User usuario[], int indUser){
     scanf("%s", usuario[indUser].nascimento);
     printf("Rua: ");
     scanf("%s", usuario[indUser].rua);
-    printf("CEP (xxxxx-xxx): ");
+    printf("CEP (xxxxxxxx): ");
     scanf("%s", usuario[indUser].cep);
+
     int numTelefones = 0;
-    while (1){
+    while (1) {
         printf("Telefone (xxxxx-xxxx): ");
         scanf("%s", usuario[indUser].telefones[numTelefones]);
         numTelefones++;
         char resp;
         printf("Deseja inserir mais um telefone (s/n)?: ");
-        scanf("%s", &resp);
+        scanf(" %c", &resp);  // Alterado para ler um único caractere.
         if (resp == 'n')
             break;
     }
+
     int numEmails = 0;
-    while (1){
+    while (1) {
         printf("Email: ");
-        scanf("%s", usuario[indUser].telefones[numEmails]);
+        scanf("%s", usuario[indUser].emails[numEmails]);
         numEmails++;
         char resp;
         printf("Deseja inserir mais um email (s/n)?: ");
-        scanf("%s", &resp);
+        scanf(" %c", &resp);  // Alterado para ler um único caractere.
         if (resp == 'n')
             break;
     }
-    printf("Profisão: ");
+
+    printf("Profissão: ");
     scanf("%s", usuario[indUser].profissao);
 }
 
-void imprimirDadosDoUsuario(User usuario[], int qntUserAtual){
-    for (int i = 0; i < qntUserAtual; i++){
-        printf("====================== Listar todos os usuários ======================\nUsuario %d* | Cpf: %d | Nome: %s | Rua: %s | CEP: %s | ", (i+1), usuario[i].cpf, usuario[i].nome,usuario[i].rua, usuario[i].cep);
+void imprimirDadosDoUsuario(User usuario[], int qntUserAtual) {
+    printf("====================== Listar todos os usuários ======================\n");
+    for (int i = 0; i < qntUserAtual; i++) {
+        printf("Usuario %d* | Cpf: %d | Nome: %s | Rua: %s | CEP: %s | ", (i + 1), usuario[i].cpf, usuario[i].nome, usuario[i].rua, usuario[i].cep);
         printf("Telefone(s): [ ");
-        for(int j = 0; j < 11; j++)
-            printf("%s ", usuario[i].telefones[j]);
+        for (int j = 0; j < 100; j++) {
+            if (usuario[i].telefones[j][0] != '\0') {
+                printf("%s ", usuario[i].telefones[j]);
+            }
+        }
         printf("] | Email(s): [ ");
-        for(int j = 0; j < 10; j++)
-            printf("%s ", usuario[i].emails[j]);
-        printf("] | Profissão: %s", usuario[i].profissao);
+        for (int j = 0; j < 100; j++) {
+            if (usuario[i].emails[j][0] != '\0') {
+                printf("%s ", usuario[i].emails[j]);
+            }
+        }
+        printf("] | Profissão: %s\n", usuario[i].profissao);
     }
 }
 
-int buscarUsuario(User usuario[], int qntUserAtual){
+int buscarUsuario(User usuario[], int qntUserAtual) {
     int cpf;
     printf("Digite o CPF do usuário desejado: ");
     scanf("%d", &cpf);
-    for (int i = 0; i < qntUserAtual; i++){
+    for (int i = 0; i < qntUserAtual; i++) {
         if (usuario[i].cpf == cpf)
             return i;
     }
-    printf("O CPF digitado não consta na bases de dados atual. Tente novamente com um CPF válido.");
+    printf("O CPF digitado não consta na base de dados atual. Tente novamente com um CPF válido.");
     return -1;
 }
 
-void imprimirUsuarioEspecifico(User usuario[], int qntUserAtual){
+void imprimirUsuarioEspecifico(User usuario[], int qntUserAtual) {
     int indUser = buscarUsuario(usuario, qntUserAtual);
-    if (indUser >= 0){
-        printf("====================== Listar todos os usuários ======================\nUsuario %d* | Cpf: %d | Nome: %s | Rua: %s | CEP: %s | ", (indUser+1), usuario[indUser].cpf, usuario[indUser].nome,usuario[indUser].rua, usuario[indUser].cep);
+    if (indUser >= 0) {
+        printf("====================== Listar todos os usuários ======================\nUsuario %d* | Cpf: %d | Nome: %s | Rua: %s | CEP: %s | ", (indUser + 1), usuario[indUser].cpf, usuario[indUser].nome, usuario[indUser].rua, usuario[indUser].cep);
         printf("Telefone(s): [ ");
-        for(int j = 0; j < 11; j++)
-            printf("%s ", usuario[indUser].telefones[j]);
-
+        for (int j = 0; j < 100; j++) {
+            if (usuario[indUser].telefones[j][0] != '\0') {
+                printf("%s ", usuario[indUser].telefones[j]);
+            }
+        }
         printf("] | Email(s): [ ");
-        for(int j = 0; j < 10; j++)
-            printf("%s ", usuario[indUser].emails[j]);
-        printf("] | Profissão: %s", usuario[indUser].profissao);
-    }
-    else
+        for (int j = 0; j < 100; j++) {
+            if (usuario[indUser].emails[j][0] != '\0') {
+                printf("%s ", usuario[indUser].emails[j]);
+            }
+        }
+        printf("] | Profissão: %s\n", usuario[indUser].profissao);
+    } else {
         printf("O usuário indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.");
+    }
 }
 
-void alterarInformacoesUsuario(User usuario[], int qntUserAtual){
+void alterarInformacoesUsuario(User usuario[], int qntUserAtual) {
     int indUser = buscarUsuario(usuario, qntUserAtual);
     int op;
-    if (indUser >= 0){
+    if (indUser >= 0) {
         printf("====================== Alterando dados do usuário ======================\n1-Nome.\n2-Data de nascimento\n3-Rua.\n4-CEP.\n5-Telefone(s).\n6-Email(s).\n7-Profissão.\nEntre com o número do submenu desejado: ");
         scanf("%d", &op);
-        switch (op){
+        switch (op) {
         case 1:
             printf("Alterando nome: ");
             scanf("%s", usuario[indUser].nome);
@@ -149,16 +164,16 @@ void alterarInformacoesUsuario(User usuario[], int qntUserAtual){
             printf("Alterando email(s): ");
             break;
         case 7:
-            printf("Profisão: ");
+            printf("Profissão: ");
             scanf("%s", usuario[indUser].profissao);
             break;
         default:
-            printf("Opção inválida. Tente novamente com uma opção disponivel no submenu de atributos a serem alterado do usuário.");
+            printf("Opção inválida. Tente novamente com uma opção disponível no submenu de atributos a serem alterados do usuário.");
             break;
         }
-    }
-    else
+    } else {
         printf("O usuário indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.");
+    }
 }
 
 int main() {
@@ -170,87 +185,86 @@ int main() {
         if (opMenu == 5)
             break;
         switch (opMenu) {
-            case 1:
-                printf("Submenu de Usuários\n");
-                while (1) {
-                    opSubMenu = Submenus();
-                    if (opSubMenu == 1){
-                        IncluirUsuario(usuarios, qntUser);
-                        qntUser++;
-                    }
-                    else if (opSubMenu == 2)
-                        imprimirDadosDoUsuario(usuarios, qntUser);                        
-                    else if (opSubMenu == 3)
-                        imprimirUsuarioEspecifico(usuarios, qntUser);
-                    else if (opSubMenu == 4)
-                        alterarInformacoesUsuario(usuarios, qntUser);
-                    else if (opSubMenu == 5)
-                        printf("Excluindo usuário.\n");
-                    else if (opSubMenu == 6)
-                        break;
-                    else
-                        printf("Opção inválida. Entre com um número de submenu existente.\n");
-                }
-                break;
-            case 2:
-                printf("Submenu de Livros\n");
-                while (1) {
-                    opSubMenu = Submenus();
-                    if (opSubMenu == 1)
-                        printf("Incluindo livro.\n");
-                    else if (opSubMenu == 2)
-                        printf("Listar todos os livros.\n");
-                    else if (opSubMenu == 3)
-                        printf("Listar um livro específico.\n");
-                    else if (opSubMenu == 4)
-                        printf("Alterando dados de um livro.\n");
-                    else if (opSubMenu == 5)
-                        printf("Excluindo livro.\n");
-                    else if (opSubMenu == 6)
-                        break;
-                    else
-                        printf("Opção inválida. Entre com um número de submenu existente.\n");
-                }
-                break;
-            case 3:
-                printf("Submenu de Empréstimos\n");
-                while (1) {
-                    opSubMenu = Submenus();
-                    if (opSubMenu == 1)
-                        printf("Incluindo empréstimo.\n");
-                    else if (opSubMenu == 2)
-                        printf("Listar todos os empréstimos.\n");
-                    else if (opSubMenu == 3)
-                        printf("Listar um empréstimo específico.\n");
-                    else if (opSubMenu == 4)
-                        printf("Alterando dados de um empréstimo.\n");
-                    else if (opSubMenu == 5)
-                        printf("Excluindo empréstimo.\n");
-                    else if (opSubMenu == 6)
-                        break;
-                    else
-                        printf("Opção inválida. Entre com um número de submenu existente.\n");
-                }
-                break;
-            case 4:
-                printf("Submenu de Relatório\n");
-                while (1) {
-                    opRelat = SubmenuRelatorios();
-                    if (opRelat == 1)
-                        printf("Mostrar usuários por idade.\n");
-                    else if (opRelat == 2)
-                        printf("Mostrar livros por autores.\n");
-                    else if (opRelat == 3)
-                        printf("Mostrar dados por empréstimo.\n");
-                    else if (opRelat == 4)
-                        break;
-                    else
-                        printf("Opção inválida. Entre com um número de submenu existente.\n");
-                }
-                break;
-            default:
-                printf("Opção inválida. Entre com um número de submenu existente.\n");
-                break;
+        case 1:
+            printf("Submenu de Usuários\n");
+            while (1) {
+                opSubMenu = Submenus();
+                if (opSubMenu == 1) {
+                    IncluirUsuario(usuarios, qntUser);
+                    qntUser++;
+                } else if (opSubMenu == 2)
+                    imprimirDadosDoUsuario(usuarios, qntUser);
+                else if (opSubMenu == 3)
+                    imprimirUsuarioEspecifico(usuarios, qntUser);
+                else if (opSubMenu == 4)
+                    alterarInformacoesUsuario(usuarios, qntUser);
+                else if (opSubMenu == 5)
+                    printf("Excluindo usuário.\n");
+                else if (opSubMenu == 6)
+                    break;
+                else
+                    printf("Opção inválida. Entre com um número de submenu existente.\n");
+            }
+            break;
+        case 2:
+            printf("Submenu de Livros\n");
+            while (1) {
+                opSubMenu = Submenus();
+                if (opSubMenu == 1)
+                    printf("Incluindo livro.\n");
+                else if (opSubMenu == 2)
+                    printf("Listar todos os livros.\n");
+                else if (opSubMenu == 3)
+                    printf("Listar um livro específico.\n");
+                else if (opSubMenu == 4)
+                    printf("Alterando dados de um livro.\n");
+                else if (opSubMenu == 5)
+                    printf("Excluindo livro.\n");
+                else if (opSubMenu == 6)
+                    break;
+                else
+                    printf("Opção inválida. Entre com um número de submenu existente.\n");
+            }
+            break;
+        case 3:
+            printf("Submenu de Empréstimos\n");
+            while (1) {
+                opSubMenu = Submenus();
+                if (opSubMenu == 1)
+                    printf("Incluindo empréstimo.\n");
+                else if (opSubMenu == 2)
+                    printf("Listar todos os empréstimos.\n");
+                else if (opSubMenu == 3)
+                    printf("Listar um empréstimo específico.\n");
+                else if (opSubMenu == 4)
+                    printf("Alterando dados de um empréstimo.\n");
+                else if (opSubMenu == 5)
+                    printf("Excluindo empréstimo.\n");
+                else if (opSubMenu == 6)
+                    break;
+                else
+                    printf("Opção inválida. Entre com um número de submenu existente.\n");
+            }
+            break;
+        case 4:
+            printf("Submenu de Relatórios\n");
+            while (1) {
+                opRelat = SubmenuRelatorios();
+                if (opRelat == 1)
+                    printf("Mostrar usuários por idade.\n");
+                else if (opRelat == 2)
+                    printf("Mostrar livros por autores.\n");
+                else if (opRelat == 3)
+                    printf("Mostrar dados por empréstimo.\n");
+                else if (opRelat == 4)
+                    break;
+                else
+                    printf("Opção inválida. Entre com um número de submenu existente.\n");
+            }
+            break;
+        default:
+            printf("Opção inválida. Entre com um número de submenu existente.\n");
+            break;
         }
     } while (opMenu != 5);
     Linhas();

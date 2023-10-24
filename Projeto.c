@@ -4,11 +4,11 @@
 typedef struct{
     int cpf;
     char nome[100];
+    char nascimento[11];
     char rua[100];
     char cep[9];
     char telefones[100][11];
     char emails[100][10];
-    char nascimento[11];
     char profissao[100];
 } User;
 
@@ -119,6 +119,48 @@ void imprimirUsuarioEspecifico(User usuario[], int qntUserAtual){
         printf("O usuário indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.");
 }
 
+void alterarInformacoesUsuario(User usuario[], int qntUserAtual){
+    int indUser = buscarUsuario(usuario, qntUserAtual);
+    int op;
+    if (indUser >= 0){
+        printf("====================== Alterando dados do usuário ======================\n1-Nome.\n2-Data de nascimento\n3-Rua.\n4-CEP.\n5-Telefone(s).\n6-Email(s).\n7-Profissão.\nEntre com o número do submenu desejado: ");
+        scanf("%d", &op);
+        switch (op){
+        case 1:
+            printf("Alterando nome: ");
+            scanf("%s", usuario[indUser].nome);
+            break;
+        case 2:
+            printf("Alterando a data de nascimento (dia/mês/ano): ");
+            scanf("%s", usuario[indUser].nascimento);
+            break;
+        case 3:
+            printf("Alterando rua: ");
+            scanf("%s", usuario[indUser].rua);
+            break;
+        case 4:
+            printf("CEP (xxxxx-xxx): ");
+            scanf("%s", usuario[indUser].cep);
+            break;
+        case 5:
+            printf("Alterando telefone(s): ");
+            break;
+        case 6:
+            printf("Alterando email(s): ");
+            break;
+        case 7:
+            printf("Profisão: ");
+            scanf("%s", usuario[indUser].profissao);
+            break;
+        default:
+            printf("Opção inválida. Tente novamente com uma opção disponivel no submenu de atributos a serem alterado do usuário.");
+            break;
+        }
+    }
+    else
+        printf("O usuário indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.");
+}
+
 int main() {
     setlocale(LC_ALL, "portuguese");
     User usuarios[255] = {0};
@@ -141,7 +183,7 @@ int main() {
                     else if (opSubMenu == 3)
                         imprimirUsuarioEspecifico(usuarios, qntUser);
                     else if (opSubMenu == 4)
-                        printf("Alterando dados do usuário.\n");
+                        alterarInformacoesUsuario(usuarios, qntUser);
                     else if (opSubMenu == 5)
                         printf("Excluindo usuário.\n");
                     else if (opSubMenu == 6)

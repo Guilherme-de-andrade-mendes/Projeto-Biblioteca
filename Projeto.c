@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <locale.h>
+#include <string.h>
 
 typedef struct {
-    int cpf;
+    char cpf[12];
     char nome[100];
     char nascimento[11];
     char rua[100];
@@ -40,9 +41,30 @@ int SubmenuRelatorios() {
     return op;
 }
 
-void IncluirUsuario(User usuario[], int indUser) {
-    printf("====================== Incluindo Usuário ======================\nCPF: ");
-    scanf("%d", &usuario[indUser].cpf);
+int existeUsuario(User *usuario, int qntUserAtual, char *cpf) {
+    for (int i = 0; i < qntUserAtual; i++) {
+        if (strcmp(usuario[i].cpf, cpf) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void IncluirUsuario(User *usuario, int indUser) {
+    printf("====================== Incluindo Usuário ======================\n");
+    char cpf[12];
+    int x = 1;
+    while (x != 0) {
+        printf("CPF: ");
+        scanf("%s", cpf);
+        int existeUser = existeUsuario(usuario, indUser, cpf);
+        if (existeUser == 0) {
+            strcpy(usuario[indUser].cpf, cpf);
+            x = 0;
+            break;
+        }
+        printf("CPF já existe na base de dados. Tente novamente.\n");
+    }
     printf("Nome: ");
     scanf("%s", usuario[indUser].nome);
     printf("Data de nascimento (dia/mês/ano): ");
@@ -53,37 +75,40 @@ void IncluirUsuario(User usuario[], int indUser) {
     scanf("%s", usuario[indUser].cep);
 
     int numTelefones = 0;
-    while (1) {
+    int y = 1;
+    while (y != 0) {
         printf("Telefone (xxxxx-xxxx): ");
         scanf("%s", usuario[indUser].telefones[numTelefones]);
         numTelefones++;
         char resp;
         printf("Deseja inserir mais um telefone (s/n)?: ");
-        scanf(" %c", &resp);  // Alterado para ler um único caractere.
-        if (resp == 'n')
-            break;
+        scanf(" %c", &resp);
+        if (resp == 'n') {
+            y = 0;
+        }
     }
 
     int numEmails = 0;
-    while (1) {
+    int z = 1;
+    while (z != 0) {
         printf("Email: ");
         scanf("%s", usuario[indUser].emails[numEmails]);
         numEmails++;
         char resp;
         printf("Deseja inserir mais um email (s/n)?: ");
-        scanf(" %c", &resp);  // Alterado para ler um único caractere.
-        if (resp == 'n')
-            break;
+        scanf(" %c", &resp);
+        if (resp == 'n') {
+            z = 0;
+        }
     }
-
     printf("Profissão: ");
     scanf("%s", usuario[indUser].profissao);
 }
 
-void imprimirDadosDoUsuario(User usuario[], int qntUserAtual) {
+void imprimirDadosDoUsuario(User *usuario, int qntUserAtual) {
     printf("====================== Listar todos os usuários ======================\n");
     for (int i = 0; i < qntUserAtual; i++) {
-        printf("Usuario %d* | Cpf: %d | Nome: %s | Rua: %s | CEP: %s | ", (i + 1), usuario[i].cpf, usuario[i].nome, usuario[i].rua, usuario[i].cep);
+        printf("Usuario %d* | Cpf: %s | Nome: %s | Data de nascimento: %s | Rua: %s | CEP: %s | ", (i + 1), usuario[i].cpf, usuario[i].nome, usuario[i].nascimento, usuario[i].rua, usuario[i].cep);
         printf("Telefone(s): [ ");
         for (int j = 0; j < 100; j++) {
             if (usuario[i].telefones[j][0] != '\0') {
@@ -100,22 +125,24 @@ void imprimirDadosDoUsuario(User usuario[], int qntUserAtual) {
     }
 }
 
-int buscarUsuario(User usuario[], int qntUserAtual) {
-    int cpf;
+int buscarUsuario(User *usuario, int qntUserAtual) {
+    char cpf[12];
     printf("Digite o CPF do usuário desejado: ");
-    scanf("%d", &cpf);
+    scanf("%s", cpf);
     for (int i = 0; i < qntUserAtual; i++) {
-        if (usuario[i].cpf == cpf)
+        if (strcmp(usuario[i].cpf, cpf) == 0) {
+            printf("Usuario %d | Cpf: %s\n", i + 1, usuario[i].cpf);
             return i;
+        }
     }
-    printf("O CPF digitado não consta na base de dados atual. Tente novamente com um CPF válido.");
+    printf("Esse usuario nao pode ser encontrado. Tente novamente.\n");
     return -1;
 }
 
-void imprimirUsuarioEspecifico(User usuario[], int qntUserAtual) {
+void imprimirUsuarioEspecifico(User *usuario, int qntUserAtual) {
     int indUser = buscarUsuario(usuario, qntUserAtual);
     if (indUser >= 0) {
-        printf("====================== Listar todos os usuários ======================\nUsuario %d* | Cpf: %d | Nome: %s | Rua: %s | CEP: %s | ", (indUser + 1), usuario[indUser].cpf, usuario[indUser].nome, usuario[indUser].rua, usuario[indUser].cep);
+        printf("====================== Listar todos os usuários ======================\nUsuario %d* | Cpf: %s | Nome: %s | Data de nascimento: %s | Rua: %s | CEP: %s | ", (indUser + 1), usuario[indUser].cpf, usuario[indUser].nome, usuario[indUser].nascimento, usuario[indUser].rua, usuario[indUser].cep);
         printf("Telefone(s): [ ");
         for (int j = 0; j < 100; j++) {
             if (usuario[indUser].telefones[j][0] != '\0') {
@@ -129,12 +156,12 @@ void imprimirUsuarioEspecifico(User usuario[], int qntUserAtual) {
             }
         }
         printf("] | Profissão: %s\n", usuario[indUser].profissao);
-    } else {
-        printf("O usuário indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.");
     }
+    else
+        printf("O usuário indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.");
 }
 
-void alterarInformacoesUsuario(User usuario[], int qntUserAtual) {
+void alterarInformacoesUsuario(User *usuario, int qntUserAtual) {
     int indUser = buscarUsuario(usuario, qntUserAtual);
     int op;
     if (indUser >= 0) {
@@ -159,9 +186,11 @@ void alterarInformacoesUsuario(User usuario[], int qntUserAtual) {
             break;
         case 5:
             printf("Alterando telefone(s): ");
+            scanf("%s", usuario[indUser].telefones);
             break;
         case 6:
             printf("Alterando email(s): ");
+            scanf("%s", usuario[indUser].emails);
             break;
         case 7:
             printf("Profissão: ");
@@ -174,6 +203,27 @@ void alterarInformacoesUsuario(User usuario[], int qntUserAtual) {
     } else {
         printf("O usuário indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.");
     }
+}
+
+void excluirUsuario(User *usuario, int qntUserAtual){
+    int indUser = buscarUsuario(usuario, qntUserAtual);
+    if (indUser >= 0){
+        printf("\nExcluido com sucesso!");
+        int i;
+        for (i = indUser; i < (qntUserAtual - 1); i++){
+            strcpy(usuario[i].cpf, usuario[i+1].cpf);
+            strcpy(usuario[i].nome, usuario[i+1].nome);
+            strcpy(usuario[i].nascimento, usuario[i+1].nascimento);
+            strcpy(usuario[i].rua, usuario[i+1].rua);
+            strcpy(usuario[i].cep, usuario[i+1].cep);
+            strcpy(usuario[i].telefones, usuario[i+1].telefones);
+            strcpy(usuario[i].emails, usuario[i+1].emails);
+            strcpy(usuario[i].profissao, usuario[i+1].profissao);
+        }
+        (qntUserAtual)--;
+    }
+    else
+        printf("O usuário indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.");
 }
 
 int main() {
@@ -199,7 +249,7 @@ int main() {
                 else if (opSubMenu == 4)
                     alterarInformacoesUsuario(usuarios, qntUser);
                 else if (opSubMenu == 5)
-                    printf("Excluindo usuário.\n");
+                    excluirUsuario(usuarios, qntUser);
                 else if (opSubMenu == 6)
                     break;
                 else

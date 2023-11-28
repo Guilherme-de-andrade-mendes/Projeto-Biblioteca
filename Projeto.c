@@ -4,7 +4,7 @@
 #include <ctype.h>
 
 typedef struct {
-    char cpf[12];
+    char cpf[12]; // campo chave
     char nome[100];
     char nascimento[11];
     char rua[100];
@@ -15,7 +15,7 @@ typedef struct {
 } User;
 
 typedef struct{
-    char isbn[13];
+    char isbn[13]; // campo chave
     char titulo[100];
     char genero[100];
     char autores[100][10];
@@ -23,9 +23,9 @@ typedef struct{
 } Book;
 
 typedef struct{
-    char codcpf[12];
-    char codisbn[13];
-    char retirada[11];
+    char codcpf[12]; // campo chave
+    char codisbn[13]; // campo chave
+    char retirada[11]; // campo chave
     char devolucao[11];
     float multa;
 } Loan;
@@ -61,9 +61,8 @@ int SubmenuRelatorios() {
 int existeUsuario(User *usuarios, int qntUserAtual, char *cpf) {
     int i;
     for (i = 0; i < qntUserAtual; i++) {
-        if (strcmp(usuarios[i].cpf, cpf) == 0) {
+        if (strcmp(usuarios[i].cpf, cpf) == 0)
             return 1;
-        }
     }
     return 0;
 }
@@ -336,10 +335,12 @@ void imprimirDadosDolivro(Book *livros, int qntBookAtual){
     }
 }
 
-int buscarlivros(Book *livros, int qntBookAtual){
+int buscarlivros(Book *livros, int qntBookAtual, Loan *emprestimos, int qntLoanAtual){
     char isbn[17];
     printf("Digite o ISBN do livro desejado: ");
     scanf("%s", isbn);
+    //int verifEmp = verificacaoAntesDeExcluir(emprestimos, qntLoanAtual, isbn);
+    
     int i;
     for (i = 0; i < qntBookAtual; i++) {
         if (strcmp(livros[i].isbn, isbn) == 0) {
@@ -429,11 +430,19 @@ int existeEmprestimo(Loan *emprestimos, int qntLoanAtual, char *cpf, char *isbn,
     return 0;
 }
 
-void incluirEmprestimo(Loan *emprestimos, User *usuarios, Book *livros, int indLoan, int indUser, int indBook) {
+int verificacaoAntesDeExcluir(Loan *emprestimos, int indLoan, char *id){
+    int i;
+    for (i = 0; i < indLoan; i++){
+        if ((strcmp(emprestimos[indLoan].codcpf, id) == 0) || (strcmp(emprestimos[indLoan].codisbn, id) == 0))
+            return 1;
+    }
+    return 0;
+}
+
+void incluirEmprestimo(Loan *emprestimos, User *usuarios, Book *livros, int *indLoan, int indUser, int indBook) {
     char cpf[12];
     char isbn[13];
     char retirada[11];
-    char devolucao[11];
     printf("CPF: ");
     scanf("%s", cpf);
     while (existeUsuario(usuarios, indUser, cpf) != 1) {
@@ -450,17 +459,17 @@ void incluirEmprestimo(Loan *emprestimos, User *usuarios, Book *livros, int indL
     }
     printf("Data de retirada (dd/mm/aaaa): ");
     scanf("%s", retirada);
-    printf("Data de devolução (dd/mm/aaaa): ");
-    scanf("%s", devolucao);
-    printf("Valor diário da multa por atraso: ");
-    scanf("%f", &emprestimos[indLoan].multa);
 
-    if (existeEmprestimo(emprestimos, indLoan, cpf, isbn, retirada) == 0) {
-        strcpy(emprestimos[indLoan].codcpf, cpf);
-        strcpy(emprestimos[indLoan].codisbn, isbn);
-        strcpy(emprestimos[indLoan].retirada, retirada);
-        strcpy(emprestimos[indLoan].devolucao, devolucao);
+    if (existeEmprestimo(emprestimos, *indLoan, cpf, isbn, retirada) == 0) {
+        strcpy(emprestimos[*indLoan].codcpf, cpf);
+        strcpy(emprestimos[*indLoan].codisbn, isbn);
+        strcpy(emprestimos[*indLoan].retirada, retirada);
+        printf("Data de devolução (dd/mm/aaaa): ");
+        scanf("%s", emprestimos[*indLoan].devolucao);
+        printf("Valor diário da multa por atraso: ");
+        scanf("%f", &emprestimos[*indLoan].multa);
         printf("Empréstimo efetivado com sucesso!\n");
+        (*indLoan)++;
     } else {
         printf("Já existe um empréstimo com essas características.\n");
     }
@@ -486,7 +495,7 @@ int buscarEmprestimo(Loan *emprestimos, int indLoan){
     int i;
     for (i = 0; i < indLoan; i++) {
         if ((strcmp(emprestimos[i].codcpf, cpf) == 0) && (strcmp(emprestimos[i].codisbn, isbn) == 0) && (strcmp(emprestimos[i].retirada, retirada) == 0)) {
-            printf("Empréstimo %d* | CPF: %s | ISBN: %s | Data de retirada: %s | Data de devolução: %s | Multa por atraso (diário): %.2f\n", (i+1),emprestimos[i].codcpf, emprestimos[i].codisbn, emprestimos[i].retirada, emprestimos[i].devolucao , emprestimos[i].multa);
+            printf("Empréstimo %d* | CPF: %s | ISBN: %s | Data de retirada: %s\n", (i+1),emprestimos[i].codcpf, emprestimos[i].codisbn, emprestimos[i].retirada);
             return i;
         }
     }
@@ -494,8 +503,58 @@ int buscarEmprestimo(Loan *emprestimos, int indLoan){
     return -1;
 }
 
+void imprimirEmprestimoEspecifico(Loan *emprestimos, int qntLoanAtual) {
+    int indloan = buscarEmprestimo(emprestimos, qntLoanAtual);
+    if (indloan >= 0) {
+        printf("====================== Listando empréstimo específico ======================\nEmpréstimo %d* | CPF: %s | ISBN: %s | Data de retirada: %s | Data de devolução: %s | Multa por atraso (diário): %.2f\n", (indloan+1),emprestimos[indloan].codcpf, emprestimos[indloan].codisbn, emprestimos[indloan].retirada, emprestimos[indloan].devolucao , emprestimos[indloan].multa);
+    }
+    else
+        printf("O empréstimo indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.");
+}
+
+void alterarInformacoesEmprestimo(Loan *emprestimos, int qntLoanAtual){
+    int indloan = buscarEmprestimo(emprestimos, qntLoanAtual);
+    int op;
+    if (indloan >= 0) {
+        printf("====================== Alterando dados do empréstimo ======================\n1-Titulo.\n2-Gênero\n3-Autor(es).\n4-Número de páginas.\nEntre com o número do submenu desejado: ");
+        scanf("%d", &op);
+        switch (op) {
+        case 1:
+            printf("Alterando data de devolução: ");
+            scanf("%s", emprestimos[indloan].devolucao);
+            break;
+        case 2:
+            printf("Alterando valor da multa de atraso diária: ");
+            scanf("%s", emprestimos[indloan].multa);
+            break;
+        default:
+            printf("Opção inválida. Tente novamente com uma opção disponível no submenu de atributos a serem alterados do usuário.");
+            break;
+        }
+    } else {
+        printf("O empréstimo indicado não podê ser encontrado. Verifique se o mesmo consta na base de dados atual.");
+    } 
+}
+
+int excluirEmprestimo(Loan *emprestimos, int qntLoanAtual){
+    int indLoan = buscarEmprestimo(emprestimos, qntLoanAtual);
+    if (indLoan >= 0){
+        int i;
+        for (i = indLoan; i < (qntLoanAtual - 1); i++){
+            strcpy(emprestimos[i].codcpf, emprestimos[i+1].codcpf);
+            strcpy(emprestimos[i].codisbn, emprestimos[i+1].codisbn);
+            strcpy(emprestimos[i].retirada, emprestimos[i+1].retirada);
+            strcpy(emprestimos[i].devolucao, emprestimos[i+1].devolucao);
+            emprestimos[i].multa = emprestimos[i+1].multa;
+        }
+        return 1;
+    }
+    else
+        return 0;
+}
+
 int main(){
-    setlocale(LC_ALL, "portuguese");
+    setlocale(LC_ALL, "Portuguese");
     User usuarios[255] = {0};
     Book livros[255] = {0};
     Loan emprestimos[255] = {0};
@@ -572,16 +631,21 @@ int main(){
                 do {
                     opSubMenu = Submenus();
                     if (opSubMenu == 1) {
-                        incluirEmprestimo(emprestimos, usuarios, livros, qntUser , qntBook , qntLoan);
-                        qntLoan++;
+                        incluirEmprestimo(emprestimos, usuarios, livros, &qntLoan , qntUser , qntBook);
                     } else if (opSubMenu == 2) {
                         imprimirDadosDoEmprestimo(emprestimos, qntLoan);
                     } else if (opSubMenu == 3) {
-                        printf("Listar um empréstimo específico.\n");
+                        imprimirEmprestimoEspecifico(emprestimos, qntLoan);
                     } else if (opSubMenu == 4) {
-                        printf("Alterando dados de um empréstimo.\n");
+                        alterarInformacoesEmprestimo(emprestimos, qntLoan);
                     } else if (opSubMenu == 5) {
-                        printf("Excluindo empréstimo.\n");
+                        int excluirEmp = excluirEmprestimo(emprestimos, qntLoan);
+                        if (excluirEmp == 1) {
+                            qntLoan--;
+                            printf("Empréstimo excluído com sucesso!\n");
+                        } else {
+                            printf("O empréstimo indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.\n");
+                        }
                     } else if (opSubMenu == 6) {
                         y = 0;
                     } else

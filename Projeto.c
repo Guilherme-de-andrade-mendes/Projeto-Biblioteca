@@ -2,9 +2,11 @@
 #include <locale.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
+#include <stdlib.h>
 
 typedef struct {
-    char cpf[12]; // campo chave
+    char cpf[12];
     char nome[100];
     char nascimento[11];
     char rua[100];
@@ -15,7 +17,7 @@ typedef struct {
 } User;
 
 typedef struct{
-    char isbn[13]; // campo chave
+    char isbn[13];
     char titulo[100];
     char genero[100];
     char autores[100][10];
@@ -23,12 +25,31 @@ typedef struct{
 } Book;
 
 typedef struct{
-    char codcpf[12]; // campo chave
-    char codisbn[13]; // campo chave
-    char retirada[11]; // campo chave
+    char codcpf[12];
+    char codisbn[13];
+    char retirada[11];
     char devolucao[11];
     float multa;
 } Loan;
+
+struct tm parse_date(char *data) {
+    struct tm tm = {0};
+    char *token;
+
+    token = strtok(data, "/");
+    tm.tm_mday = atoi(token);
+    token = strtok(NULL, "/");
+    tm.tm_mon = atoi(token) - 1;
+    token = strtok(NULL, "/");
+    tm.tm_year = atoi(token) - 1900;
+    if (tm.tm_year < 0 || tm.tm_mon < 0 || tm.tm_mon > 11 || tm.tm_mday < 1 || tm.tm_mday > 31 || (tm.tm_mday > 30 && (tm.tm_mon == 3 || tm.tm_mon == 5 || tm.tm_mon == 8 || tm.tm_mon == 10)) || (tm.tm_mday > 29 && tm.tm_mon == 1) || (tm.tm_mday > 28 && tm.tm_mon == 1 && !(tm.tm_year % 4 == 0 && (tm.tm_year % 100 != 0 || tm.tm_year % 400 == 0)))) {
+        printf("Data inválida\n");
+        tm.tm_year = -1;
+        tm.tm_mon = -1;
+        tm.tm_mday = -1;
+    }
+    return tm;
+}
 
 void Linhas() {
     printf("==========================================================================================\n");
@@ -67,7 +88,7 @@ int existeUsuario(User *usuarios, int qntUserAtual, char *cpf) {
     return 0;
 }
 
-int validarCPF(const char *cpf) {
+int validarCPF(char *cpf) {
     int i;
     for (i = 0; i < 12; i++) {
         if (!isdigit(cpf[i]) && cpf[i] != '\0') {
@@ -98,13 +119,21 @@ void incluirUsuario(User *usuarios, int *indUser) {
     }
     printf("Nome: ");
     scanf("%s", usuarios[*indUser].nome);
-    printf("Data de nascimento (dd/mm/aaaa): ");
-    scanf("%s", usuarios[*indUser].nascimento);
+    char data[11];
+    int l = 0;
+    while (l != 1) {
+        printf("Data de nascimento (dd/mm/aaaa): ");
+        scanf("%s", data);
+        struct tm valiData = parse_date(data);
+        if (valiData.tm_year >= 0) {
+            strftime(usuarios[*indUser].nascimento, sizeof(usuarios[*indUser].nascimento), "%d/%m/%Y", &valiData);
+            l = 1;
+        }
+    }
     printf("Rua: ");
     scanf("%s", usuarios[*indUser].rua);
     printf("CEP (xxxxxxxx): ");
     scanf("%s", usuarios[*indUser].cep);
-
     int numTelefones = 0, y = 1;
     while (y != 0) {
         printf("Telefone (xxxxx-xxxx): ");
@@ -205,8 +234,18 @@ void alterarInformacoesUsuario(User *usuarios, int qntUserAtual) {
             scanf("%s", usuarios[indUser].nome);
             break;
         case 2:
-            printf("Alterando a data de nascimento (dia/mês/ano): ");
-            scanf("%s", usuarios[indUser].nascimento);
+            printf("Alterando a data de nascimento (dia/mês/ano)\n");
+            char data[11];
+            int l = 0;
+            while (l != 1) {
+                printf("Data de nascimento (dd/mm/aaaa): ");
+                scanf("%s", data);
+                struct tm valiData = parse_date(data);
+                if (valiData.tm_year >= 0) {
+                    strftime(usuarios[indUser].nascimento, sizeof(usuarios[indUser].nascimento), "%d/%m/%Y", &valiData);
+                    l = 1;
+                }
+            }
             break;
         case 3:
             printf("Alterando rua: ");
@@ -258,27 +297,41 @@ void alterarInformacoesUsuario(User *usuarios, int qntUserAtual) {
     }
 }
 
-int excluirUsuario(User *usuario, int *qntUserAtual){
-    int indUser = buscarUsuario(usuario, *qntUserAtual);
-    if (indUser >= 0){
-        int i, j, k;
-        for (i = indUser; i < (*qntUserAtual - 1); i++){
-            strcpy(usuario[i].cpf, usuario[i+1].cpf);
-            strcpy(usuario[i].nome, usuario[i+1].nome);
-            strcpy(usuario[i].nascimento, usuario[i+1].nascimento);
-            strcpy(usuario[i].rua, usuario[i+1].rua);
-            strcpy(usuario[i].cep, usuario[i+1].cep);
-            for (j = 0; j < 100; j++)
-                strcpy(usuario[i].telefones[j], usuario[i+1].telefones[j]);
-            for (k = 0; k < 100; k++)
-                strcpy(usuario[i].emails[k], usuario[i+1].emails[k]);
-            strcpy(usuario[i].profissao, usuario[i+1].profissao);
+int usuarioPossuiEmprestimo(Loan *emprestimos, int qntEmprestimos, char *cpf) {
+    for (int i = 0; i < qntEmprestimos; i++) {
+        if (strcmp(emprestimos[i].codcpf, cpf) == 0) {
+            return 1;
         }
-        (*qntUserAtual)--;
-        return 1;
+    }
+    return 0;
+}
+
+int excluirUsuario(User *usuarios, Loan *emprestimos, int *qntUserAtual, int qntLoanAtual){
+    int indUser = buscarUsuario(usuarios, *qntUserAtual);
+    if (indUser >= 0){
+        if ((usuarioPossuiEmprestimo(emprestimos, qntLoanAtual, usuarios[indUser].cpf)) == 1){
+            return 0;
+        }
+        else{
+            int i, j, k;
+            for (i = indUser; i < (*qntUserAtual - 1); i++){
+                strcpy(usuarios[i].cpf, usuarios[i+1].cpf);
+                strcpy(usuarios[i].nome, usuarios[i+1].nome);
+                strcpy(usuarios[i].nascimento, usuarios[i+1].nascimento);
+                strcpy(usuarios[i].rua, usuarios[i+1].rua);
+                strcpy(usuarios[i].cep, usuarios[i+1].cep);
+                for (j = 0; j < 100; j++)
+                    strcpy(usuarios[i].telefones[j], usuarios[i+1].telefones[j]);
+                for (k = 0; k < 100; k++)
+                    strcpy(usuarios[i].emails[k], usuarios[i+1].emails[k]);
+                strcpy(usuarios[i].profissao, usuarios[i+1].profissao);
+            }
+            (*qntUserAtual)--;
+            return 1;
+        }
     }
     else
-        return 0;
+        return 2;
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------
@@ -433,23 +486,37 @@ void alterarInformacoesLivro(Book *livros, int qntBookAtual){
     } 
 }
 
-int excluirLivro(Book *livros, int *qntBookAtual){
+int LivroPossuiEmprestimo(Loan *emprestimos, int qntEmprestimos, char *isbn) {
+    for (int i = 0; i < qntEmprestimos; i++) {
+        if (strcmp(emprestimos[i].codisbn, isbn) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int excluirLivro(Book *livros, Loan *emprestimos, int *qntBookAtual, int qntLoanAtual){
     int indBook = buscarlivros(livros, *qntBookAtual);
     if (indBook >= 0){
-        int i, j;
-        for (i = indBook; i < (*qntBookAtual - 1); i++){
-            strcpy(livros[i].isbn, livros[i+1].isbn);
-            strcpy(livros[i].titulo, livros[i+1].titulo);
-            strcpy(livros[i].genero, livros[i+1].genero);
-            for (j = 0; j < 100; j++)
-                strcpy(livros[i].autores[j], livros[i+1].autores[j]);
-            livros[i].numPaginas = livros[i+1].numPaginas;
+        if (LivroPossuiEmprestimo(emprestimos, qntLoanAtual, livros[indBook].isbn) == 1){
+            return 0;
         }
-        (*qntBookAtual)--;
-        return 1;
+        else{
+            int i, j;
+            for (i = indBook; i < (*qntBookAtual - 1); i++){
+                strcpy(livros[i].isbn, livros[i+1].isbn);
+                strcpy(livros[i].titulo, livros[i+1].titulo);
+                strcpy(livros[i].genero, livros[i+1].genero);
+                for (j = 0; j < 100; j++)
+                    strcpy(livros[i].autores[j], livros[i+1].autores[j]);
+                livros[i].numPaginas = livros[i+1].numPaginas;
+            }
+            (*qntBookAtual)--;
+            return 1;
+        }
     }
     else
-        return 0;
+        return 2;
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------
@@ -463,47 +530,70 @@ int existeEmprestimo(Loan *emprestimos, int qntLoanAtual, char *cpf, char *isbn,
     return 0;
 }
 
-/*int verificacaoAntesDeExcluir(Loan *emprestimos, int indLoan, char *id){
-    int i;
-    for (i = 0; i < indLoan; i++){
-        if ((strcmp(emprestimos[i].codcpf, *id) == 0) || (strcmp(emprestimos[i].codisbn, *id) == 0))
-            return 1;
-    }
-    return 0;
-}*/
-
 void incluirEmprestimo(Loan *emprestimos, User *usuarios, Book *livros, int *indLoan, int indUser, int indBook) {
     char cpf[12];
     char isbn[13];
     char retirada[11];
+    char devolucao[11];
     printf("CPF: ");
     scanf("%s", cpf);
-    while (existeUsuario(usuarios, indUser, cpf) != 1) {
+    while (existeUsuario(usuarios, indUser, cpf) != 0) { // mudar paara 1 dps
         printf("Esse CPF não existe na base de dados. Tente novamente.\n");
         printf("CPF: ");
         scanf("%s", cpf);
     }
     printf("ISBN: ");
     scanf("%s", isbn);
-    while (existeLivro(livros, indBook, isbn) != 1) {
+    while (existeLivro(livros, indBook, isbn) != 0) { // mudar paara 1 dps
         printf("Esse ISBN não existe na base de dados. Tente novamente.\n");
         printf("ISBN: ");
         scanf("%s", isbn);
     }
-    printf("Data de retirada (dd/mm/aaaa): ");
-    scanf("%s", retirada);
+    int l = 0;
+    do {
+        printf("Data de retirada (dd/mm/aaaa): ");
+        scanf("%s", retirada);
+        struct tm valiData = parse_date(retirada);
+        if (valiData.tm_year >= 0) {
+            char retiradaFormatada[11];
+            strftime(retiradaFormatada, sizeof(retiradaFormatada), "%d/%m/%Y", &valiData);
+            strcpy(retirada, retiradaFormatada);
 
+            l = 1;
+        } else {
+            printf("Data inválida. Tente novamente.\n");
+        }
+    } while (l != 1);
     if (existeEmprestimo(emprestimos, *indLoan, cpf, isbn, retirada) == 0) {
         strcpy(emprestimos[*indLoan].codcpf, cpf);
         strcpy(emprestimos[*indLoan].codisbn, isbn);
         strcpy(emprestimos[*indLoan].retirada, retirada);
-        printf("Data de devolução (dd/mm/aaaa): ");
-        scanf("%s", emprestimos[*indLoan].devolucao);
+        int v = 0;
+        do {
+            printf("Data de devolução (dd/mm/aaaa): ");
+            scanf("%s", devolucao);
+            struct tm valiDataDev = parse_date(devolucao);
+
+            struct tm retirada_tm = parse_date(emprestimos[*indLoan].retirada);
+            time_t retirada_time = mktime(&retirada_tm);
+
+            time_t devolucao_time = mktime(&valiDataDev);
+            if ((valiDataDev.tm_year >= 0) && difftime(devolucao_time, retirada_time) >= 0) {
+                char devolucao_formatada[11];
+                strftime(devolucao_formatada, sizeof(devolucao_formatada), "%d/%m/%Y", &valiDataDev);
+                strcpy(devolucao, devolucao_formatada);
+                strcpy(emprestimos[*indLoan].devolucao, devolucao);
+                v = 1;
+            }
+            else {
+                printf("Data inválida ou menor que a data de retirada. Tente novamente.\n");
+            }
+        } while (v != 1);
         printf("Valor diário da multa por atraso: ");
         scanf("%f", &emprestimos[*indLoan].multa);
         (*indLoan)++;
         printf("Empréstimo efetivado com sucesso!\n");
-    } 
+    }
     else
         printf("Já existe um empréstimo com essas características.\n");
 }
@@ -548,13 +638,30 @@ void imprimirEmprestimoEspecifico(Loan *emprestimos, int qntLoanAtual) {
 void alterarInformacoesEmprestimo(Loan *emprestimos, int qntLoanAtual){
     int indloan = buscarEmprestimo(emprestimos, qntLoanAtual);
     int op;
+    int x = 0;
+    char devolucao[11];
     if (indloan >= 0) {
         printf("====================== Alterando dados do empréstimo ======================\n1-Data de Devolução.\n2-Valor da multa de atraso diária.\nEntre com o número do submenu desejado: ");
         scanf("%d", &op);
         switch (op) {
         case 1:
-            printf("Alterando data de devolução: ");
-            scanf("%s", emprestimos[indloan].devolucao);
+            do {
+                printf("Alterando data de devolução: ");
+                scanf("%s", devolucao);
+                struct tm valiDataDev = parse_date(devolucao);
+                struct tm retirada_tm = parse_date(emprestimos[indloan].retirada);
+                time_t retirada_time = mktime(&retirada_tm);
+                time_t devolucao_time = mktime(&valiDataDev);
+                if ((valiDataDev.tm_year >= 0) && difftime(devolucao_time, retirada_time) >= 0) {
+                    char devolucao_formatada[11];
+                    strftime(devolucao_formatada, sizeof(devolucao_formatada), "%d/%m/%Y", &valiDataDev);
+                    strcpy(devolucao, devolucao_formatada);
+                    strcpy(emprestimos[indloan].devolucao, devolucao);
+                    x = 1;
+                }
+                else
+                    printf("Data inválida ou menor que a data de retirada. Tente novamente.\n");
+            } while (x == 0);
             break;
         case 2:
             printf("Alterando valor da multa de atraso diária: ");
@@ -587,6 +694,37 @@ int excluirEmprestimo(Loan *emprestimos, int *qntLoanAtual){
         return 0;
 }
 
+//--------------------------------------------------------------------------------------------------------------------------------
+
+void relatorioPorIdadeDoUsuario(User *usuarios, int indUser){
+    time_t t = time(NULL);
+    struct tm* now = localtime(&t);
+    printf("Mostrar usuários por idade\nEntre com o valor da idade mínima: ");
+    int idadeMin = 0, i;
+    scanf("%d", &idadeMin);
+    for (i = 0; i < indUser; i++){
+        int idade = now->tm_year + 1900 - *usuarios[i].nascimento;
+        if (idade >= idadeMin){
+            printf("Usuario %d* | Cpf: %s | Nome: %s | Data de nascimento: %s | Rua: %s | CEP: %s | ", (i + 1), usuarios[i].cpf, usuarios[i].nome, usuarios[i].nascimento, usuarios[i].rua, usuarios[i].cep);
+            printf("Telefone(s): [ ");
+            int j;
+            for (j = 0; j < 100; j++) {
+                if (usuarios[i].telefones[j][0] != '\0') {
+                    printf("%s ", usuarios[i].telefones[j]);
+                }
+            }
+            printf("] | Email(s): [ ");
+            int l;
+            for (l = 0; l < 100; l++) {
+                if (usuarios[i].emails[l][0] != '\0') {
+                    printf("%s ", usuarios[i].emails[l]);
+                }
+            }
+            printf("] | Profissão: %s\n", usuarios[i].profissao);
+        }
+    }
+}
+
 int main(){
     setlocale(LC_ALL, "Portuguese");
     User usuarios[255] = {0};
@@ -613,11 +751,16 @@ int main(){
                     } else if (opSubMenu == 4) {
                         alterarInformacoesUsuario(usuarios, qntUser);
                     } else if (opSubMenu == 5) {
-                        int excluirUse = excluirUsuario(usuarios,&qntUser);
+                        int excluirUse = excluirUsuario(usuarios, emprestimos, &qntUser, qntLoan);
                         if (excluirUse == 1) {
                             printf("Usuário excluído com sucesso!\n");
-                        } else {
+                        } 
+                        else if (excluirUse == 2){
                             printf("O usuário indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.\n");
+
+                        }
+                        else {
+                            printf("Esse usuário possui associações dentro dos registros de empréstimos.Logo, não pode ser excluído.\n");
                         }
                     } else if (opSubMenu == 6) {
                         w = 0;
@@ -641,11 +784,15 @@ int main(){
                         printf("Alterando dados de um livro.\n");
                         alterarInformacoesLivro(livros, qntBook);
                     } else if (opSubMenu == 5) {
-                        int excluirLiv = excluirLivro(livros, &qntBook);
+                        int excluirLiv = excluirLivro(livros, emprestimos, &qntBook, qntLoan);
                         if (excluirLiv == 1) {
                             printf("Livro excluído com sucesso!\n");
-                        } else {
+                        } 
+                        else if (excluirLiv == 2){
                             printf("O Livro indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.\n");
+                        }
+                        else {
+                            printf("Esse livro possui associações dentro dos registros de empréstimos.Logo, não pode ser excluído. \n");
                         }
                     } else if (opSubMenu == 6) {
                         x = 0;
@@ -685,7 +832,7 @@ int main(){
                 do {
                     opRelat = SubmenuRelatorios();
                     if (opRelat == 1) {
-                        printf("Mostrar usuários por idade.\n");
+                        relatorioPorIdadeDoUsuario(usuarios, qntUser);
                     } else if (opRelat == 2) {
                         printf("Mostrar livros por autores.\n");
                     } else if (opRelat == 3) {

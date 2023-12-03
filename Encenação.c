@@ -21,6 +21,7 @@ typedef struct{
     char titulo[100];
     char genero[100];
     char autores[100][10];
+    int qntautores[255];
     int numPaginas;
 } Book;
 
@@ -32,10 +33,9 @@ typedef struct{
     float multa;
 } Loan;
 
-struct tm parse_date(char *data) {
+struct tm parse_date(char *data){
     struct tm tm = {0};
     char *token;
-
     token = strtok(data, "/");
     tm.tm_mday = atoi(token);
     token = strtok(NULL, "/");
@@ -43,7 +43,6 @@ struct tm parse_date(char *data) {
     token = strtok(NULL, "/");
     tm.tm_year = atoi(token) - 1900;
     if (tm.tm_year < 0 || tm.tm_mon < 0 || tm.tm_mon > 11 || tm.tm_mday < 1 || tm.tm_mday > 31 || (tm.tm_mday > 30 && (tm.tm_mon == 3 || tm.tm_mon == 5 || tm.tm_mon == 8 || tm.tm_mon == 10)) || (tm.tm_mday > 29 && tm.tm_mon == 1) || (tm.tm_mday > 28 && tm.tm_mon == 1 && !(tm.tm_year % 4 == 0 && (tm.tm_year % 100 != 0 || tm.tm_year % 400 == 0)))) {
-        printf("Data inválida\n");
         tm.tm_year = -1;
         tm.tm_mon = -1;
         tm.tm_mday = -1;
@@ -392,6 +391,7 @@ void incluirLivro(Book *livros, int *indBook){
             y = 0;
         }
     }
+    livros[*indBook].qntautores[*indBook] = numAutores;
     printf("Numero de páginas: ");
     scanf("%d", &livros[*indBook].numPaginas);
     (*indBook)++;
@@ -472,6 +472,7 @@ void alterarInformacoesLivro(Book *livros, int qntBookAtual){
                     y = 0;
                 }
             }
+            livros[indBook].qntautores[indBook] = numAutores;
             break;
         case 4:
             printf("Alterando número de páginas: ");
@@ -509,6 +510,7 @@ int excluirLivro(Book *livros, Loan *emprestimos, int *qntBookAtual, int qntLoan
                 strcpy(livros[i].genero, livros[i+1].genero);
                 for (j = 0; j < 100; j++)
                     strcpy(livros[i].autores[j], livros[i+1].autores[j]);
+                livros[i].qntautores[i] = livros[i+1].qntautores[i+1];
                 livros[i].numPaginas = livros[i+1].numPaginas;
             }
             (*qntBookAtual)--;
@@ -558,6 +560,7 @@ void incluirEmprestimo(Loan *emprestimos, User *usuarios, Book *livros, int *ind
             char retiradaFormatada[11];
             strftime(retiradaFormatada, sizeof(retiradaFormatada), "%d/%m/%Y", &valiData);
             strcpy(retirada, retiradaFormatada);
+
             l = 1;
         } else {
             printf("Data inválida. Tente novamente.\n");
@@ -695,7 +698,60 @@ int excluirEmprestimo(Loan *emprestimos, int *qntLoanAtual){
 
 //--------------------------------------------------------------------------------------------------------------------------------
 
+void listarPorIdade(User *usuarios, int indUser){
+    time_t t = time(NULL);
+    struct tm* now = localtime(&t);
+    printf("Listando usuários por idade\nEntre com o valor da idade mínima: ");
+    int idadeMin = 0, i;
+    scanf("%d", &idadeMin);
+    for (i = 0; i < indUser; i++){
+        struct tm dataNascimento = parse_date(usuarios[i].nascimento);
 
+        if (dataNascimento.tm_year < 0) {
+            continue;  // Pular para o próximo usuário se a data de nascimento for inválida
+        }
+        int idade = now->tm_year + 1900 - (dataNascimento.tm_year + 1900);
+        if ((now->tm_mon < dataNascimento.tm_mon) || (now->tm_mon == dataNascimento.tm_mon && now->tm_mday < dataNascimento.tm_mday)) {
+            idade--;  // Ainda não fez aniversário este ano
+        }
+        if (idade >= idadeMin){
+            printf("Usuario %d* | Cpf: %s | Nome: %s | Data de nascimento: %s | Rua: %s | CEP: %s | ", (i + 1), usuarios[i].cpf, usuarios[i].nome, usuarios[i].nascimento, usuarios[i].rua, usuarios[i].cep);
+            printf("Telefone(s): [ ");
+            int j;
+            for (j = 0; j < 100; j++) {
+                if (usuarios[i].telefones[j][0] != '\0') {
+                    printf("%s ", usuarios[i].telefones[j]);
+                }
+            }
+            printf("] | Email(s): [ ");
+            int l;
+            for (l = 0; l < 100; l++) {
+                if (usuarios[i].emails[l][0] != '\0') {
+                    printf("%s ", usuarios[i].emails[l]);
+                }
+            }
+            printf("] | Profissão: %s\n", usuarios[i].profissao);
+        }
+    }
+}
+
+void listarPorQuantidadeDeAutores(Book *livros, int indBook) {
+    printf("Listando livros por quantidade de autores\nEntre com a quantidade mínima de autores: ");
+    int minAutores = 0, i;
+    scanf("%d", &minAutores);
+    for (i = 0; i < indBook; i++){
+        if (livros[i].qntautores[0] >= minAutores){
+            printf("Livro %d* | ISBN: %s | Titulo: %s | Genero: %s | ", (i + 1), livros[i].isbn, livros[i].titulo, livros[i].genero);
+            printf("Autor(es): [ ");
+            int j;
+            for (j = 0; j < 100; j++) {
+                if (livros[i].autores[j][0] != '\0')
+                    printf("%s ", livros[i].autores[j]);
+            }
+            printf("] | Número de páginas: %d\n", livros[i].numPaginas);
+        }   
+    } 
+}
 
 int main(){
     setlocale(LC_ALL, "Portuguese");
@@ -804,9 +860,9 @@ int main(){
                 do {
                     opRelat = SubmenuRelatorios();
                     if (opRelat == 1) {
-                        printf("Mostrar usuários por idade.\n");
+                        listarPorIdade(usuarios, qntUser);
                     } else if (opRelat == 2) {
-                        printf("Mostrar livros por autores.\n");
+                        listarPorQuantidadeDeAutores(livros, qntBook);
                     } else if (opRelat == 3) {
                         printf("Mostrar dados por empréstimo.\n");
                     } else if (opRelat == 4) {

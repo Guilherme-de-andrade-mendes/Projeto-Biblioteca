@@ -540,14 +540,14 @@ void incluirEmprestimo(Loan *emprestimos, User *usuarios, Book *livros, int *ind
     char devolucao[11];
     printf("CPF: ");
     scanf("%s", cpf);
-    while (existeUsuario(usuarios, indUser, cpf) != 0) { // mudar paara 1 dps
+    while (existeUsuario(usuarios, indUser, cpf) != 0) { // mudar para 1 dps
         printf("Esse CPF não existe na base de dados. Tente novamente.\n");
         printf("CPF: ");
         scanf("%s", cpf);
     }
     printf("ISBN: ");
     scanf("%s", isbn);
-    while (existeLivro(livros, indBook, isbn) != 0) { // mudar paara 1 dps
+    while (existeLivro(livros, indBook, isbn) != 0) { // mudar para 1 dps
         printf("Esse ISBN não existe na base de dados. Tente novamente.\n");
         printf("ISBN: ");
         scanf("%s", isbn);
@@ -699,14 +699,16 @@ int excluirEmprestimo(Loan *emprestimos, int *qntLoanAtual){
 
 //--------------------------------------------------------------------------------------------------------------------------------
 
-/*void listarPorIdade(User *usuarios, int indUser){
+void listarPorIdade(User *usuarios, int indUser){
     time_t t = time(NULL);
     struct tm* now = localtime(&t);
     printf("Listando usuários por idade\nEntre com o valor da idade mínima: ");
     int idadeMin = 0, i;
     scanf("%d", &idadeMin);
     for (i = 0; i < indUser; i++){
-        struct tm dataNascimento = parse_date(usuarios[i].nascimento);
+        char nascimento[11]; 
+        strcpy(nascimento, usuarios[i].nascimento);
+        struct tm dataNascimento = parse_date(nascimento);
 
         if (dataNascimento.tm_year < 0) {
             continue;  // Pular para o próximo usuário se a data de nascimento for inválida
@@ -741,7 +743,7 @@ void listarPorQuantidadeDeAutores(Book *livros, int indBook) {
     int minAutores = 0, i;
     scanf("%d", &minAutores);
     for (i = 0; i < indBook; i++){
-        if (livros[i].qntautores[i] >= minAutores){
+        if (livros[i].qntautores[0] >= minAutores){
             printf("Livro %d* | ISBN: %s | Titulo: %s | Genero: %s | ", (i + 1), livros[i].isbn, livros[i].titulo, livros[i].genero);
             printf("Autor(es): [ ");
             int j;
@@ -756,7 +758,7 @@ void listarPorQuantidadeDeAutores(Book *livros, int indBook) {
 
 void listarPorIntervaloDeEmprestimo(User *usuarios, Book *livros, Loan *emprestimos, int indLoan){
 
-}*/
+}
 
 int main(){
     setlocale(LC_ALL, "Portuguese");
@@ -891,13 +893,13 @@ int main(){
                     opRelat = SubmenuRelatorios();
                     switch (opRelat) {
                         case 1:
-                            //listarPorIdade(usuarios, qntUser);
+                            listarPorIdade(usuarios, qntUser);
                             break;
                         case 2:
-                            //listarPorQuantidadeDeAutores(livros, qntBook);
+                            listarPorQuantidadeDeAutores(livros, qntBook);
                             break;
                         case 3:
-                            //listarPorIntervaloDeEmprestimo(usuarios, livros, emprestimos, qntLoan);
+                            listarPorIntervaloDeEmprestimo(usuarios, livros, emprestimos, qntLoan);
                             break;
                         case 4:
                             z = 0;

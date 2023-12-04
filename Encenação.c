@@ -749,8 +749,8 @@ void listarPorQuantidadeDeAutores(Book *livros, int indBook) {
                     printf("%s ", livros[i].autores[j]);
             }
             printf("] | Número de páginas: %d\n", livros[i].numPaginas);
-        }   
-    } 
+        }
+    }
 }
 
 int main(){

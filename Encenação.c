@@ -17,7 +17,7 @@ typedef struct {
 } User;
 
 typedef struct{
-    char isbn[13];
+    char isbn[11];
     char titulo[100];
     char genero[100];
     char autores[100][10];
@@ -345,33 +345,32 @@ int existeLivro(Book *livros, int qntBookAtual, char *isbn) {
     return 0;
 }
 
-/*int validarISBN(const char *isbn) {
+int validarISBN(const char *isbn) {
     int i;
-    for (i = 0; i < 13; i++) {
+    for (i = 0; i < 11; i++) {
         if (!isdigit(isbn[i]) && isbn[i] != '\0') {
             return 0;
         }
     }
     return 1;
-}*/
+}
 
 void incluirLivro(Book *livros, int *indBook){
     printf("====================== Incluindo Livro ======================\n");
-    char isbn[13];
+    char isbn[11];
     int x = 1;
     while (x != 0) {
         printf("ISBN: ");
         scanf("%s", isbn);
-        //int valido = validarISBN(isbn);
+        int valido = validarISBN(isbn);
         int existeBook = existeLivro(livros, *indBook, isbn);
-        //if (existeBook == 0 && valido) {
-        if (existeBook == 0) {  //Apagar essa linha quando terminar os testes
+        if (existeBook == 0 && valido) {
             strcpy(livros[*indBook].isbn, isbn);
             x = 0;
             break;
         }
-        /*else if (!valido)
-            printf("ISBN inválido. Tente novamente.\n");*/
+        else if (!valido)
+            printf("ISBN inválido. Tente novamente.\n");
         else
             printf("Esse ISBN já existe na base de dados. Tente novamente.\n");
     }
@@ -415,7 +414,7 @@ void imprimirDadosDolivro(Book *livros, int qntBookAtual){
 }
 
 int buscarlivros(Book *livros, int qntBookAtual){
-    char isbn[17];
+    char isbn[11];
     printf("Digite o ISBN do livro desejado: ");
     scanf("%s", isbn);
     int i;
@@ -535,19 +534,19 @@ int existeEmprestimo(Loan *emprestimos, int qntLoanAtual, char *cpf, char *isbn,
 
 void incluirEmprestimo(Loan *emprestimos, User *usuarios, Book *livros, int *indLoan, int indUser, int indBook) {
     char cpf[12];
-    char isbn[13];
+    char isbn[11];
     char retirada[11];
     char devolucao[11];
     printf("CPF: ");
     scanf("%s", cpf);
-    while (existeUsuario(usuarios, indUser, cpf) != 0) { // mudar para 1 dps
+    while (existeUsuario(usuarios, indUser, cpf) != 1){
         printf("Esse CPF não existe na base de dados. Tente novamente.\n");
         printf("CPF: ");
         scanf("%s", cpf);
     }
     printf("ISBN: ");
     scanf("%s", isbn);
-    while (existeLivro(livros, indBook, isbn) != 0) { // mudar para 1 dps
+    while (existeLivro(livros, indBook, isbn) != 1){
         printf("Esse ISBN não existe na base de dados. Tente novamente.\n");
         printf("ISBN: ");
         scanf("%s", isbn);
@@ -561,7 +560,6 @@ void incluirEmprestimo(Loan *emprestimos, User *usuarios, Book *livros, int *ind
             char retiradaFormatada[11];
             strftime(retiradaFormatada, sizeof(retiradaFormatada), "%d/%m/%Y", &valiData);
             strcpy(retirada, retiradaFormatada);
-
             l = 1;
         } else {
             printf("Data inválida. Tente novamente.\n");
@@ -610,7 +608,7 @@ void imprimirDadosDoEmprestimo(Loan *emprestimos, int indLoan){
 
 int buscarEmprestimo(Loan *emprestimos, int indLoan){
     char cpf[12];
-    char isbn[13];
+    char isbn[11];
     char retirada[11];
     printf("Digite o CPF do usuário: ");
     scanf("%s", cpf);
@@ -756,8 +754,46 @@ void listarPorQuantidadeDeAutores(Book *livros, int indBook) {
     } 
 }
 
-void listarPorIntervaloDeEmprestimo(User *usuarios, Book *livros, Loan *emprestimos, int indLoan){
-
+void listarPorIntervaloDeEmprestimo(User *usuarios, Book *livros, Loan *emprestimos, int indUser, int indBook, int indLoan) {
+    char primeiraData[11], segundaData[11];
+    printf("Digite a data de início (formato: dd/mm/aaaa): ");
+    scanf("%s", primeiraData);
+    printf("Digite a data de fim (formato: dd/mm/aaaa): ");
+    scanf("%s", segundaData);
+    struct tm dataInicio = parse_date(primeiraData);
+    struct tm dataFim = parse_date(segundaData);
+    time_t Dinicio = mktime(&dataInicio);
+    time_t Dfim = mktime(&dataFim);
+    int encontrouEmprestimos = 0;
+    printf("\nEmpréstimos no intervalo de datas:\n");
+    int i;
+    for (i = 0; i < indLoan; i++) {
+        struct tm devolucao_tm = parse_date(emprestimos[i].devolucao);
+        time_t devolucao_time = mktime(&devolucao_tm);
+        if (difftime(devolucao_time, Dinicio) >= 0 && difftime(Dfim, devolucao_time) >= 0) {
+            encontrouEmprestimos = 1;
+            printf("\nDados do Empréstimo:\n");
+            printf("CPF: %s | Nome: ", emprestimos[i].codcpf);
+            int j;
+            for (j = 0; j < indUser; j++) {
+                if (strcmp(usuarios[j].cpf, emprestimos[i].codcpf) == 0) {
+                    printf("%s ", usuarios[j].nome);
+                    break;
+                }
+            }
+            printf("| ISBN: %s | Título: ", emprestimos[i].codisbn);
+            int k;
+            for (k = 0; k < indBook; k++) {
+                if (strcmp(livros[k].isbn, emprestimos[i].codisbn) == 0) {
+                    printf("%s ", livros[k].titulo);
+                    break;
+                }
+            }
+            printf("| Data de retirada: %s | Data de devolução: %s | Multa por atraso (diário): %.2f\n", emprestimos[i].retirada, emprestimos[i].devolucao, emprestimos[i].multa);
+        }
+    }
+    if (!encontrouEmprestimos)
+        printf("\nNão foram encontrados empréstimos entre as datas fornecidas.\n");
 }
 
 int main(){
@@ -767,11 +803,8 @@ int main(){
     Loan emprestimos[255] = {0};
 
     int opMenu, opSubMenu, opRelat, qntUser = 0, qntBook = 0, qntLoan = 0;
-
     do {
-
         opMenu = MenuPrincipal();
-
         switch (opMenu) {
             case 1: {
                 printf("Submenu de Usuários\n");
@@ -899,7 +932,7 @@ int main(){
                             listarPorQuantidadeDeAutores(livros, qntBook);
                             break;
                         case 3:
-                            listarPorIntervaloDeEmprestimo(usuarios, livros, emprestimos, qntLoan);
+                            listarPorIntervaloDeEmprestimo(usuarios, livros, emprestimos, qntUser, qntBook, qntLoan);
                             break;
                         case 4:
                             z = 0;

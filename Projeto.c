@@ -4,7 +4,7 @@
 #include <ctype.h>
 
 typedef struct {
-    char cpf[12]; // campo chave
+    char cpf[12];
     char nome[100];
     char nascimento[11];
     char rua[100];
@@ -15,7 +15,7 @@ typedef struct {
 } User;
 
 typedef struct{
-    char isbn[13]; // campo chave
+    char isbn[13];
     char titulo[100];
     char genero[100];
     char autores[100][10];
@@ -23,9 +23,9 @@ typedef struct{
 } Book;
 
 typedef struct{
-    char codcpf[12]; // campo chave
-    char codisbn[13]; // campo chave
-    char retirada[11]; // campo chave
+    char codcpf[12];
+    char codisbn[13];
+    char retirada[11];
     char devolucao[11];
     float multa;
 } Loan;

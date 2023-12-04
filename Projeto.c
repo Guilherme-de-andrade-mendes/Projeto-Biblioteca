@@ -713,31 +713,27 @@ int main(){
                 int w = 1;
                 do {
                     opSubMenu = Submenus();
-                    if (opSubMenu == 1) {
+                    if (opSubMenu == 1)
                         incluirUsuario(usuarios, &qntUser);
-                    } else if (opSubMenu == 2) {
+                    else if (opSubMenu == 2)
                         imprimirDadosDoUsuario(usuarios, qntUser);
-                    } else if (opSubMenu == 3) {
+                    else if (opSubMenu == 3)
                         imprimirUsuarioEspecifico(usuarios, qntUser);
-                    } else if (opSubMenu == 4) {
+                    else if (opSubMenu == 4)
                         alterarInformacoesUsuario(usuarios, qntUser);
-                    } else if (opSubMenu == 5) {
+                    else if (opSubMenu == 5) {
                         int excluirUse = excluirUsuario(usuarios, emprestimos, &qntUser, qntLoan);
-                        if (excluirUse == 1) {
+                        if (excluirUse == 1)
                             printf("Usuário excluído com sucesso!\n");
-                        } 
-                        else if (excluirUse == 2){
+                        else if (excluirUse == 2)
                             printf("O usuário indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.\n");
-
-                        }
-                        else {
+                        else
                             printf("Esse usuário possui associações dentro dos registros de empréstimos.Logo, não pode ser excluído.\n");
-                        }
-                    } else if (opSubMenu == 6) {
+                    } 
+                    else if (opSubMenu == 6)
                         w = 0;
-                    } else {
+                    else
                         printf("Opção inválida. Entre com um número de submenu existente.\n");
-                    }
                 } while (w == 1);
                 break;
             case 2:
@@ -745,29 +741,26 @@ int main(){
                 int x = 1;
                 do {
                     opSubMenu = Submenus();
-                    if (opSubMenu == 1) {
+                    if (opSubMenu == 1)
                         incluirLivro(livros, &qntBook);
-                    } else if (opSubMenu == 2) {
+                    else if (opSubMenu == 2)
                         imprimirDadosDolivro(livros, qntBook);
-                    } else if (opSubMenu == 3) {
+                    else if (opSubMenu == 3)
                         imprimirLivroEspecifico(livros, qntBook);
-                    } else if (opSubMenu == 4) {
-                        printf("Alterando dados de um livro.\n");
+                    else if (opSubMenu == 4)
                         alterarInformacoesLivro(livros, qntBook);
-                    } else if (opSubMenu == 5) {
+                    else if (opSubMenu == 5) {
                         int excluirLiv = excluirLivro(livros, emprestimos, &qntBook, qntLoan);
-                        if (excluirLiv == 1) {
+                        if (excluirLiv == 1)
                             printf("Livro excluído com sucesso!\n");
-                        } 
-                        else if (excluirLiv == 2){
+                        else if (excluirLiv == 2)
                             printf("O Livro indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.\n");
-                        }
-                        else {
+                        else 
                             printf("Esse livro possui associações dentro dos registros de empréstimos.Logo, não pode ser excluído. \n");
-                        }
-                    } else if (opSubMenu == 6) {
+                    }
+                    else if (opSubMenu == 6)
                         x = 0;
-                    } else
+                    else
                         printf("Opção inválida. Entre com um número de submenu existente.\n");
                 } while (x == 1);
                 break;
@@ -776,24 +769,24 @@ int main(){
                 int y = 1;
                 do {
                     opSubMenu = Submenus();
-                    if (opSubMenu == 1) {
+                    if (opSubMenu == 1)
                         incluirEmprestimo(emprestimos, usuarios, livros, &qntLoan , qntUser , qntBook);
-                    } else if (opSubMenu == 2) {
+                    else if (opSubMenu == 2)
                         imprimirDadosDoEmprestimo(emprestimos, qntLoan);
-                    } else if (opSubMenu == 3) {
+                    else if (opSubMenu == 3)
                         imprimirEmprestimoEspecifico(emprestimos, qntLoan);
-                    } else if (opSubMenu == 4) {
+                    else if (opSubMenu == 4)
                         alterarInformacoesEmprestimo(emprestimos, qntLoan);
-                    } else if (opSubMenu == 5) {
+                    else if (opSubMenu == 5) {
                         int excluirEmp = excluirEmprestimo(emprestimos, &qntLoan);
-                        if (excluirEmp == 1) {
+                        if (excluirEmp == 1)
                             printf("Empréstimo excluído com sucesso!\n");
-                        } else {
+                        else
                             printf("O empréstimo indicado não podê ser encontrado. Verifique se o mesmo consta na base de dados atual.\n");
-                        }
-                    } else if (opSubMenu == 6) {
+                    }
+                    else if (opSubMenu == 6)
                         y = 0;
-                    } else
+                    else
                         printf("Opção inválida. Entre com um número de submenu existente.\n");
                 } while (y == 1);
                 break;
@@ -802,15 +795,15 @@ int main(){
                 int z = 1;
                 do {
                     opRelat = SubmenuRelatorios();
-                    if (opRelat == 1) {
+                    if (opRelat == 1)
                        printf("Em teste...\n");
-                    } else if (opRelat == 2) {
+                    else if (opRelat == 2)
                        printf("Em teste...\n");
-                    } else if (opRelat == 3) {
+                    else if (opRelat == 3)
                        printf("Em teste...");
-                    } else if (opRelat == 4) {
+                    else if (opRelat == 4)
                         z = 0;
-                    } else 
+                    else 
                         printf("Opção inválida. Entre com um número de submenu existente.\n");
                 } while (z == 1);
                 break;

@@ -21,6 +21,7 @@ typedef struct{
     char titulo[100];
     char genero[100];
     char autores[100][10];
+    int qntautores[255];
     int numPaginas;
 } Book;
 
@@ -32,10 +33,9 @@ typedef struct{
     float multa;
 } Loan;
 
-struct tm parse_date(char *data) {
+struct tm parse_date(char *data){
     struct tm tm = {0};
     char *token;
-
     token = strtok(data, "/");
     tm.tm_mday = atoi(token);
     token = strtok(NULL, "/");
@@ -43,7 +43,6 @@ struct tm parse_date(char *data) {
     token = strtok(NULL, "/");
     tm.tm_year = atoi(token) - 1900;
     if (tm.tm_year < 0 || tm.tm_mon < 0 || tm.tm_mon > 11 || tm.tm_mday < 1 || tm.tm_mday > 31 || (tm.tm_mday > 30 && (tm.tm_mon == 3 || tm.tm_mon == 5 || tm.tm_mon == 8 || tm.tm_mon == 10)) || (tm.tm_mday > 29 && tm.tm_mon == 1) || (tm.tm_mday > 28 && tm.tm_mon == 1 && !(tm.tm_year % 4 == 0 && (tm.tm_year % 100 != 0 || tm.tm_year % 400 == 0)))) {
-        printf("Data inválida\n");
         tm.tm_year = -1;
         tm.tm_mon = -1;
         tm.tm_mday = -1;
@@ -170,16 +169,17 @@ void imprimirDadosDoUsuario(User *usuarios, int qntUserAtual) {
     for (i = 0; i < qntUserAtual; i++) {
         printf("Usuario %d* | Cpf: %s | Nome: %s | Data de nascimento: %s | Rua: %s | CEP: %s | ", (i + 1), usuarios[i].cpf, usuarios[i].nome, usuarios[i].nascimento, usuarios[i].rua, usuarios[i].cep);
         printf("Telefone(s): [ ");
-        for (int j = 0; j < 100; j++) {
+        int j;
+        for ( j = 0; j < 100; j++) {
             if (usuarios[i].telefones[j][0] != '\0') {
                 printf("%s ", usuarios[i].telefones[j]);
             }
         }
         printf("] | Email(s): [ ");
-        int j;
-        for (j = 0; j < 100; j++) {
-            if (usuarios[i].emails[j][0] != '\0') {
-                printf("%s ", usuarios[i].emails[j]);
+        int l;
+        for (l = 0; l < 100; l++) {
+            if (usuarios[i].emails[l][0] != '\0') {
+                printf("%s ", usuarios[i].emails[l]);
             }
         }
         printf("] | Profissão: %s\n", usuarios[i].profissao);
@@ -392,6 +392,7 @@ void incluirLivro(Book *livros, int *indBook){
             y = 0;
         }
     }
+    livros[*indBook].qntautores[*indBook] = numAutores;
     printf("Numero de páginas: ");
     scanf("%d", &livros[*indBook].numPaginas);
     (*indBook)++;
@@ -472,6 +473,7 @@ void alterarInformacoesLivro(Book *livros, int qntBookAtual){
                     y = 0;
                 }
             }
+            livros[indBook].qntautores[indBook] = numAutores;
             break;
         case 4:
             printf("Alterando número de páginas: ");
@@ -509,6 +511,7 @@ int excluirLivro(Book *livros, Loan *emprestimos, int *qntBookAtual, int qntLoan
                 strcpy(livros[i].genero, livros[i+1].genero);
                 for (j = 0; j < 100; j++)
                     strcpy(livros[i].autores[j], livros[i+1].autores[j]);
+                livros[i].qntautores[i] = livros[i+1].qntautores[i+1];
                 livros[i].numPaginas = livros[i+1].numPaginas;
             }
             (*qntBookAtual)--;
@@ -537,14 +540,14 @@ void incluirEmprestimo(Loan *emprestimos, User *usuarios, Book *livros, int *ind
     char devolucao[11];
     printf("CPF: ");
     scanf("%s", cpf);
-    while (existeUsuario(usuarios, indUser, cpf) != 0) { // mudar paara 1 dps
+    while (existeUsuario(usuarios, indUser, cpf) != 0) { // mudar para 1 dps
         printf("Esse CPF não existe na base de dados. Tente novamente.\n");
         printf("CPF: ");
         scanf("%s", cpf);
     }
     printf("ISBN: ");
     scanf("%s", isbn);
-    while (existeLivro(livros, indBook, isbn) != 0) { // mudar paara 1 dps
+    while (existeLivro(livros, indBook, isbn) != 0) { // mudar para 1 dps
         printf("Esse ISBN não existe na base de dados. Tente novamente.\n");
         printf("ISBN: ");
         scanf("%s", isbn);
@@ -696,124 +699,218 @@ int excluirEmprestimo(Loan *emprestimos, int *qntLoanAtual){
 
 //--------------------------------------------------------------------------------------------------------------------------------
 
+void listarPorIdade(User *usuarios, int indUser){
+    time_t t = time(NULL);
+    struct tm* now = localtime(&t);
+    printf("Listando usuários por idade\nEntre com o valor da idade mínima: ");
+    int idadeMin = 0, i;
+    scanf("%d", &idadeMin);
+    for (i = 0; i < indUser; i++){
+        char nascimento[11]; 
+        strcpy(nascimento, usuarios[i].nascimento);
+        struct tm dataNascimento = parse_date(nascimento);
+
+        if (dataNascimento.tm_year < 0) {
+            continue;  // Pular para o próximo usuário se a data de nascimento for inválida
+        }
+        int idade = now->tm_year + 1900 - (dataNascimento.tm_year + 1900);
+        if ((now->tm_mon < dataNascimento.tm_mon) || (now->tm_mon == dataNascimento.tm_mon && now->tm_mday < dataNascimento.tm_mday)) {
+            idade--;  // Ainda não fez aniversário este ano
+        }
+        if (idade >= idadeMin){
+            printf("Usuario %d* | Cpf: %s | Nome: %s | Data de nascimento: %s | Rua: %s | CEP: %s | ", (i + 1), usuarios[i].cpf, usuarios[i].nome, usuarios[i].nascimento, usuarios[i].rua, usuarios[i].cep);
+            printf("Telefone(s): [ ");
+            int j;
+            for (j = 0; j < 100; j++) {
+                if (usuarios[i].telefones[j][0] != '\0') {
+                    printf("%s ", usuarios[i].telefones[j]);
+                }
+            }
+            printf("] | Email(s): [ ");
+            int l;
+            for (l = 0; l < 100; l++) {
+                if (usuarios[i].emails[l][0] != '\0') {
+                    printf("%s ", usuarios[i].emails[l]);
+                }
+            }
+            printf("] | Profissão: %s\n", usuarios[i].profissao);
+        }
+    }
+}
+
+void listarPorQuantidadeDeAutores(Book *livros, int indBook) {
+    printf("Listando livros por quantidade de autores\nEntre com a quantidade mínima de autores: ");
+    int minAutores = 0, i;
+    scanf("%d", &minAutores);
+    for (i = 0; i < indBook; i++){
+        if (livros[i].qntautores[0] >= minAutores){
+            printf("Livro %d* | ISBN: %s | Titulo: %s | Genero: %s | ", (i + 1), livros[i].isbn, livros[i].titulo, livros[i].genero);
+            printf("Autor(es): [ ");
+            int j;
+            for (j = 0; j < 100; j++) {
+                if (livros[i].autores[j][0] != '\0')
+                    printf("%s ", livros[i].autores[j]);
+            }
+            printf("] | Número de páginas: %d\n", livros[i].numPaginas);
+        }   
+    } 
+}
+
+void listarPorIntervaloDeEmprestimo(User *usuarios, Book *livros, Loan *emprestimos, int indLoan){
+
+}
+
 int main(){
     setlocale(LC_ALL, "Portuguese");
     User usuarios[255] = {0};
     Book livros[255] = {0};
     Loan emprestimos[255] = {0};
+
     int opMenu, opSubMenu, opRelat, qntUser = 0, qntBook = 0, qntLoan = 0;
 
     do {
+
         opMenu = MenuPrincipal();
-        if (opMenu == 5)
-            break;
+
         switch (opMenu) {
-            case 1:
+            case 1: {
                 printf("Submenu de Usuários\n");
                 int w = 1;
                 do {
                     opSubMenu = Submenus();
-                    if (opSubMenu == 1) {
-                        incluirUsuario(usuarios, &qntUser);
-                    } else if (opSubMenu == 2) {
-                        imprimirDadosDoUsuario(usuarios, qntUser);
-                    } else if (opSubMenu == 3) {
-                        imprimirUsuarioEspecifico(usuarios, qntUser);
-                    } else if (opSubMenu == 4) {
-                        alterarInformacoesUsuario(usuarios, qntUser);
-                    } else if (opSubMenu == 5) {
-                        int excluirUse = excluirUsuario(usuarios, emprestimos, &qntUser, qntLoan);
-                        if (excluirUse == 1) {
-                            printf("Usuário excluído com sucesso!\n");
-                        } 
-                        else if (excluirUse == 2){
-                            printf("O usuário indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.\n");
-
+                    switch (opSubMenu) {
+                        case 1:
+                            incluirUsuario(usuarios, &qntUser);
+                            break;
+                        case 2:
+                            imprimirDadosDoUsuario(usuarios, qntUser);
+                            break;
+                        case 3:
+                            imprimirUsuarioEspecifico(usuarios, qntUser);
+                            break;
+                        case 4:
+                            alterarInformacoesUsuario(usuarios, qntUser);
+                            break;
+                        case 5: {
+                            int excluirUse = excluirUsuario(usuarios, emprestimos, &qntUser, qntLoan);
+                            if (excluirUse == 1)
+                                printf("Usuário excluído com sucesso!\n");
+                            else if (excluirUse == 2)
+                                printf("O usuário indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.\n");
+                            else
+                                printf("Esse usuário possui associações dentro dos registros de empréstimos. Logo, não pode ser excluído.\n");
+                            break;
                         }
-                        else {
-                            printf("Esse usuário possui associações dentro dos registros de empréstimos.Logo, não pode ser excluído.\n");
-                        }
-                    } else if (opSubMenu == 6) {
-                        w = 0;
-                    } else {
-                        printf("Opção inválida. Entre com um número de submenu existente.\n");
+                        case 6:
+                            w = 0;
+                            break;
+                        default:
+                            printf("Opção inválida. Entre com um número de submenu existente.\n");
+                            break;
                     }
                 } while (w == 1);
                 break;
-            case 2:
+            }
+            case 2: {
                 printf("Submenu de Livros\n");
                 int x = 1;
                 do {
                     opSubMenu = Submenus();
-                    if (opSubMenu == 1) {
-                        incluirLivro(livros, &qntBook);
-                    } else if (opSubMenu == 2) {
-                        imprimirDadosDolivro(livros, qntBook);
-                    } else if (opSubMenu == 3) {
-                        imprimirLivroEspecifico(livros, qntBook);
-                    } else if (opSubMenu == 4) {
-                        printf("Alterando dados de um livro.\n");
-                        alterarInformacoesLivro(livros, qntBook);
-                    } else if (opSubMenu == 5) {
-                        int excluirLiv = excluirLivro(livros, emprestimos, &qntBook, qntLoan);
-                        if (excluirLiv == 1) {
-                            printf("Livro excluído com sucesso!\n");
-                        } 
-                        else if (excluirLiv == 2){
-                            printf("O Livro indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.\n");
+                    switch (opSubMenu) {
+                        case 1:
+                            incluirLivro(livros, &qntBook);
+                            break;
+                        case 2:
+                            imprimirDadosDolivro(livros, qntBook);
+                            break;
+                        case 3:
+                            imprimirLivroEspecifico(livros, qntBook);
+                            break;
+                        case 4:
+                            printf("Alterando dados de um livro.\n");
+                            alterarInformacoesLivro(livros, qntBook);
+                            break;
+                        case 5: {
+                            int excluirLiv = excluirLivro(livros, emprestimos, &qntBook, qntLoan);
+                            if (excluirLiv == 1)
+                                printf("Livro excluído com sucesso!\n");
+                            else if (excluirLiv == 2)
+                                printf("O Livro indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.\n");
+                            else
+                                printf("Esse livro possui associações dentro dos registros de empréstimos. Logo, não pode ser excluído.\n");
+                            break;
                         }
-                        else {
-                            printf("Esse livro possui associações dentro dos registros de empréstimos.Logo, não pode ser excluído. \n");
-                        }
-                    } else if (opSubMenu == 6) {
-                        x = 0;
-                    } else
-                        printf("Opção inválida. Entre com um número de submenu existente.\n");
+                        case 6:
+                            x = 0;
+                            break;
+                        default:
+                            printf("Opção inválida. Entre com um número de submenu existente.\n");
+                            break;
+                    }
                 } while (x == 1);
                 break;
-            case 3:
+            }
+            case 3: {
                 printf("Submenu de Empréstimos\n");
                 int y = 1;
                 do {
                     opSubMenu = Submenus();
-                    if (opSubMenu == 1) {
-                        incluirEmprestimo(emprestimos, usuarios, livros, &qntLoan , qntUser , qntBook);
-                    } else if (opSubMenu == 2) {
-                        imprimirDadosDoEmprestimo(emprestimos, qntLoan);
-                    } else if (opSubMenu == 3) {
-                        imprimirEmprestimoEspecifico(emprestimos, qntLoan);
-                    } else if (opSubMenu == 4) {
-                        alterarInformacoesEmprestimo(emprestimos, qntLoan);
-                    } else if (opSubMenu == 5) {
-                        int excluirEmp = excluirEmprestimo(emprestimos, &qntLoan);
-                        if (excluirEmp == 1) {
-                            printf("Empréstimo excluído com sucesso!\n");
-                        } else {
-                            printf("O empréstimo indicado não podê ser encontrado. Verifique se o mesmo consta na base de dados atual.\n");
+                    switch (opSubMenu) {
+                        case 1:
+                            incluirEmprestimo(emprestimos, usuarios, livros, &qntLoan, qntUser, qntBook);
+                            break;
+                        case 2:
+                            imprimirDadosDoEmprestimo(emprestimos, qntLoan);
+                            break;
+                        case 3:
+                            imprimirEmprestimoEspecifico(emprestimos, qntLoan);
+                            break;
+                        case 4:
+                            alterarInformacoesEmprestimo(emprestimos, qntLoan);
+                            break;
+                        case 5: {
+                            int excluirEmp = excluirEmprestimo(emprestimos, &qntLoan);
+                            if (excluirEmp == 1)
+                                printf("Empréstimo excluído com sucesso!\n");
+                            else
+                                printf("O empréstimo indicado não pode ser encontrado. Verifique se o mesmo consta na base de dados atual.\n");
+                            break;
                         }
-                    } else if (opSubMenu == 6) {
-                        y = 0;
-                    } else
-                        printf("Opção inválida. Entre com um número de submenu existente.\n");
+                        case 6:
+                            y = 0;
+                            break;
+                        default:
+                            printf("Opção inválida. Entre com um número de submenu existente.\n");
+                            break;
+                    }
                 } while (y == 1);
                 break;
-            case 4:
+            }
+            case 4: {
                 printf("Submenu de Relatórios\n");
                 int z = 1;
                 do {
                     opRelat = SubmenuRelatorios();
-                    if (opRelat == 1) {
-                       printf("Em teste...\n");
-                    } else if (opRelat == 2) {
-                       printf("Em teste...\n");
-                    } else if (opRelat == 3) {
-                       printf("Em teste...");
-                    } else if (opRelat == 4) {
-                        z = 0;
-                    } else 
-                        printf("Opção inválida. Entre com um número de submenu existente.\n");
+                    switch (opRelat) {
+                        case 1:
+                            listarPorIdade(usuarios, qntUser);
+                            break;
+                        case 2:
+                            listarPorQuantidadeDeAutores(livros, qntBook);
+                            break;
+                        case 3:
+                            listarPorIntervaloDeEmprestimo(usuarios, livros, emprestimos, qntLoan);
+                            break;
+                        case 4:
+                            z = 0;
+                            break;
+                        default:
+                            printf("Opção inválida. Entre com um número de submenu existente.\n");
+                            break;
+                    }
                 } while (z == 1);
                 break;
+            }
             default:
                 printf("Opção inválida. Entre com um número de submenu existente.\n");
                 break;

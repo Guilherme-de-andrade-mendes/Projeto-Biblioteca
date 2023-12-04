@@ -699,7 +699,7 @@ int excluirEmprestimo(Loan *emprestimos, int *qntLoanAtual){
 
 //--------------------------------------------------------------------------------------------------------------------------------
 
-void listarPorIdade(User *usuarios, int indUser){
+/*void listarPorIdade(User *usuarios, int indUser){
     time_t t = time(NULL);
     struct tm* now = localtime(&t);
     printf("Listando usuários por idade\nEntre com o valor da idade mínima: ");
@@ -754,7 +754,7 @@ void listarPorQuantidadeDeAutores(Book *livros, int indBook) {
     } 
 }
 
-/*void listarPorIntervaloDeEmprestimo(User *usuarios, Book *livros, Loan *emprestimos, int indLoan){
+void listarPorIntervaloDeEmprestimo(User *usuarios, Book *livros, Loan *emprestimos, int indLoan){
 
 }*/
 
@@ -891,10 +891,10 @@ int main(){
                     opRelat = SubmenuRelatorios();
                     switch (opRelat) {
                         case 1:
-                            listarPorIdade(usuarios, qntUser);
+                            //listarPorIdade(usuarios, qntUser);
                             break;
                         case 2:
-                            listarPorQuantidadeDeAutores(livros, qntBook);
+                            //listarPorQuantidadeDeAutores(livros, qntBook);
                             break;
                         case 3:
                             //listarPorIntervaloDeEmprestimo(usuarios, livros, emprestimos, qntLoan);

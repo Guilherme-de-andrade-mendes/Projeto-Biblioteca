@@ -33,22 +33,34 @@ typedef struct{
     float multa;
 } Loan;
 
-struct tm parse_date(char *data){
+struct tm parse_date(const char *data) {
     struct tm tm = {0};
     char *token;
-    token = strtok(data, "/");
-    tm.tm_mday = atoi(token);
-    token = strtok(NULL, "/");
-    tm.tm_mon = atoi(token) - 1;
-    token = strtok(NULL, "/");
-    tm.tm_year = atoi(token) - 1900;
-    if (tm.tm_year < 0 || tm.tm_mon < 0 || tm.tm_mon > 11 || tm.tm_mday < 1 || tm.tm_mday > 31 || (tm.tm_mday > 30 && (tm.tm_mon == 3 || tm.tm_mon == 5 || tm.tm_mon == 8 || tm.tm_mon == 10)) || (tm.tm_mday > 29 && tm.tm_mon == 1) || (tm.tm_mday > 28 && tm.tm_mon == 1 && !(tm.tm_year % 4 == 0 && (tm.tm_year % 100 != 0 || tm.tm_year % 400 == 0)))) {
-        tm.tm_year = -1;
-        tm.tm_mon = -1;
-        tm.tm_mday = -1;
+    char dataCopy[strlen(data) + 1];
+    strcpy(dataCopy, data);
+    token = strtok(dataCopy, "/");
+    if (token != NULL) {
+        tm.tm_mday = atoi(token);
+        token = strtok(NULL, "/");
+        if (token != NULL) {
+            tm.tm_mon = atoi(token) - 1;
+            token = strtok(NULL, "/");
+            if (token != NULL) {
+                tm.tm_year = atoi(token) - 1900;
+                if (tm.tm_year < 0 || tm.tm_mon < 0 || tm.tm_mon > 11 || tm.tm_mday < 1 || tm.tm_mday > 31 ||
+                    (tm.tm_mday > 30 && (tm.tm_mon == 3 || tm.tm_mon == 5 || tm.tm_mon == 8 || tm.tm_mon == 10)) ||
+                    (tm.tm_mday > 29 && tm.tm_mon == 1) ||
+                    (tm.tm_mday > 28 && tm.tm_mon == 1 && !(tm.tm_year % 4 == 0 && (tm.tm_year % 100 != 0 || tm.tm_year % 400 == 0)))) {
+                    tm.tm_year = -1;
+                    tm.tm_mon = -1;
+                    tm.tm_mday = -1;
+                }
+            }
+        }
     }
     return tm;
 }
+
 
 void Linhas() {
     printf("==========================================================================================\n");
@@ -795,6 +807,8 @@ void listarPorIntervaloDeEmprestimo(User *usuarios, Book *livros, Loan *empresti
     if (!encontrouEmprestimos)
         printf("\nNão foram encontrados empréstimos entre as datas fornecidas.\n");
 }
+
+//--------------------------------------------------------------------------------------------------------------------------------
 
 int main(){
     setlocale(LC_ALL, "Portuguese");
